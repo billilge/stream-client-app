@@ -45,6 +45,7 @@ example
 
 # Editor
 .idea
+.vscode
 
 # pnpm
 pnpm-debug.log*
