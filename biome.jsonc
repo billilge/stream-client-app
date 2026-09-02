@@ -1,0 +1,144 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/web-build",
+      "!**/.expo",
+      "!**/ios",
+      "!**/android",
+      "!**/coverage",
+      "!**/node_modules",
+      "!**/pnpm-lock.yaml",
+      "!**/*.d.ts",
+      "!**/assets"
+    ]
+  },
+
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100,
+    "attributePosition": "auto",
+    "bracketSpacing": true,
+    "expand": "auto"
+  },
+
+  "css": {
+    "parser": {
+      // Tailwind CSS 지시어(@tailwind, @theme 등) 파싱 허용 — 없으면 global.css에서 파싱 에러가 난다
+      "tailwindDirectives": true
+    },
+    "linter": {
+      // Tailwind 전용 at-rule과 충돌하는 CSS 린터는 끈다
+      "enabled": false
+    }
+  },
+
+  "linter": {
+    "enabled": true,
+
+    "domains": {
+      "react": "recommended"
+    },
+
+    "rules": {
+      "preset": "recommended",
+
+      "nursery": {
+        // Tailwind(NativeWind) 클래스 순서를 자동 정렬
+        "useSortedClasses": {
+          "level": "error",
+          "fix": "safe",
+          "options": {
+            "attributes": ["class", "className"],
+            "functions": ["clsx", "cva", "cn", "twMerge", "twJoin"]
+          }
+        }
+      },
+
+      "correctness": {
+        "noUnusedImports": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "noUnusedVariables": {
+          "level": "warn",
+          "fix": "none"
+        },
+        "noUnusedFunctionParameters": {
+          "level": "warn",
+          "fix": "none"
+        },
+        "noUndeclaredVariables": "warn"
+      },
+
+      "suspicious": {
+        "noDebugger": "error",
+        "noConsole": {
+          "level": "warn",
+          "fix": "none",
+          "options": {
+            "allow": ["log", "info", "warn", "error"]
+          }
+        },
+        "noVar": "error",
+        "noExplicitAny": "warn"
+      },
+
+      "style": {
+        "useConst": "error"
+      },
+
+      "a11y": {
+        // RN에서 Pressable/View의 onPress 패턴에서 불필요한 웹 a11y 경고 방지
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off",
+        "noSvgWithoutTitle": "off"
+      }
+    }
+  },
+
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "bracketSpacing": true,
+      "attributePosition": "auto",
+      "expand": "auto"
+    }
+  },
+
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    }
+  }
+}
