@@ -1,57 +1,61 @@
-# Welcome to your Expo app 👋
+# stream-client-app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+국민대학교 소프트웨어융합대학 통합 플랫폼 'STREAM' 앱 (Expo + React Native + TypeScript).
 
-## Get started
+화면 UI는 [stream-client-web](https://github.com/billilge/stream-client-web)이 전담한다. 이 저장소는 그 웹을 WebView로 띄우는 **네이티브 셸**이다. 앞으로 푸시 알림, 토큰 저장처럼 웹이 할 수 없는 기능을 네이티브에서 맡는다.
 
-1. Install dependencies
+## 개발 환경
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+- Node: `.nvmrc` 참고 (`nvm use`)
+- 패키지 매니저: [pnpm](https://pnpm.io/) — Corepack으로 관리한다 (`corepack enable` 후 `pnpm install`만 실행하면 `packageManager` 필드에 고정된 버전이 자동으로 쓰인다)
 
 ```bash
-npm run reset-project
+corepack enable
+pnpm install
+cp .env.example .env.local   # 웹 주소를 실행 환경에 맞게 채운다
+pnpm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 웹 주소 설정
 
-### Other setup steps
+WebView가 띄울 주소는 `.env.local`의 `EXPO_PUBLIC_WEB_URL`로 주입한다. 이 파일은 git에 올리지 않는다.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+**실행 환경마다 가리켜야 하는 주소가 다르다.**
 
-## Learn more
+| 실행 환경 | 웹 주소 |
+| --- | --- |
+| iOS 시뮬레이터 | `http://localhost:5173` |
+| Android 에뮬레이터 | `http://10.0.2.2:5173` |
+| 실제 기기 (Expo Go) | `http://{개발 PC의 LAN IP}:5173` |
 
-To learn more about developing your project with Expo, look at the following resources:
+실제 기기에서는 `localhost`가 기기 자신을 가리켜 개발 PC에 닿지 않으므로 LAN IP를 써야 하고, 웹도 `pnpm dev --host`로 띄워야 한다.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+자세한 실행 방법·준비물·트러블슈팅은 **[docs/local-development.md](docs/local-development.md)** 참고.
 
-## Join the community
+## 스크립트
 
-Join our community of developers creating universal apps.
+| 명령 | 설명 |
+| --- | --- |
+| `pnpm start` | Expo 개발 서버 실행 |
+| `pnpm ios` | iOS 시뮬레이터에서 실행 |
+| `pnpm android` | Android 에뮬레이터에서 실행 |
+| `pnpm web` | 웹에서 실행 |
+| `pnpm lint` | Biome lint |
+| `pnpm format` | Biome로 포맷 적용 |
+| `pnpm check` | Biome lint + format 검증 |
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# stream-client-app
+## 구조
+
+```
+src/
+├─ app/                  expo-router 라우팅 껍데기
+├─ features/webview/     WebView 셸 화면
+├─ constants/            설정 상수
+└─ utils/                공용 유틸
+```
+
+## 문서
+
+- [로컬 실행 가이드](docs/local-development.md)
+- [코딩 컨벤션](docs/conventions/coding-style.md)
+- [Git 컨벤션](docs/conventions/git-convention.md)
