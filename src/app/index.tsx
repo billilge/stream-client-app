@@ -1,5 +1,3 @@
-import { View } from "react-native";
+import WebViewScreen from "@/features/webview/WebViewScreen";
 
-export default function Index() {
-  return <View className="flex-1" />;
-}
+export default WebViewScreen;
