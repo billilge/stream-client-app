@@ -1,9 +1,12 @@
-import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, BackHandler, Linking, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewNavigation } from "react-native-webview";
+import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { WEB_URL } from "@/constants/config";
 import WebViewMessage from "@/features/webview/components/WebViewMessage";
+import { isSameOrigin } from "@/utils/url";
 
 // WebView는 서드파티 컴포넌트라 NativeWind의 className이 적용되지 않는다. style로 채운다.
 const styles = StyleSheet.create({
@@ -14,11 +17,53 @@ export default function WebViewScreen() {
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  // 안드로이드 하드웨어 백 버튼은 기본적으로 앱을 종료한다. 웹 히스토리가 남아 있으면 뒤로 보낸다.
+  useEffect(() => {
+    if (Platform.OS !== "android") {
+      return;
+    }
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!canGoBack) {
+        return false;
+      }
+      webViewRef.current?.goBack();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [canGoBack]);
 
   const handleRetry = useCallback(() => {
     setHasError(false);
     setIsLoading(true);
     webViewRef.current?.reload();
+  }, []);
+
+  const handleNavigationStateChange = useCallback((navigation: WebViewNavigation) => {
+    setCanGoBack(navigation.canGoBack);
+  }, []);
+
+  // 서비스 바깥 주소는 웹뷰 안에서 열지 않고 시스템 브라우저·기본 앱으로 넘긴다.
+  const handleShouldStartLoad = useCallback((request: ShouldStartLoadRequest) => {
+    const { url } = request;
+
+    if (url.startsWith("about:") || isSameOrigin(url, WEB_URL)) {
+      return true;
+    }
+
+    const open =
+      url.startsWith("http://") || url.startsWith("https://")
+        ? WebBrowser.openBrowserAsync(url)
+        : Linking.openURL(url);
+
+    open.catch((error) => {
+      console.warn(`외부 링크를 열지 못했습니다: ${url}`, error);
+    });
+
+    return false;
   }, []);
 
   if (!WEB_URL) {
@@ -53,6 +98,8 @@ export default function WebViewScreen() {
           }}
           onLoadEnd={() => setIsLoading(false)}
           onLoadStart={() => setIsLoading(true)}
+          onNavigationStateChange={handleNavigationStateChange}
+          onShouldStartLoadWithRequest={handleShouldStartLoad}
           ref={webViewRef}
           source={{ uri: WEB_URL }}
           style={styles.webView}
