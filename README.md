@@ -12,7 +12,7 @@
 ```bash
 corepack enable
 pnpm install
-cp .env.example .env.local   # 웹 주소를 자기 환경에 맞게 채운다
+cp .env.example .env.local   # 웹 주소를 실행 환경에 맞게 채운다
 pnpm start
 ```
 
@@ -20,15 +20,17 @@ pnpm start
 
 WebView가 띄울 주소는 `.env.local`의 `EXPO_PUBLIC_WEB_URL`로 주입한다. 이 파일은 git에 올리지 않는다.
 
-로컬 개발 중에는 `stream-client-web`의 dev 서버를 가리킨다. **`localhost`는 쓸 수 없다** — 기기에서 `localhost`는 기기 자신을 가리키므로 개발 PC에 닿지 않는다. 개발 PC의 LAN IP를 쓰고, 기기와 PC가 같은 네트워크에 있어야 한다.
+**실행 환경마다 가리켜야 하는 주소가 다르다.**
 
-```bash
-ipconfig getifaddr en0   # macOS에서 LAN IP 확인
-```
+| 실행 환경 | 웹 주소 |
+| --- | --- |
+| iOS 시뮬레이터 | `http://localhost:5173` |
+| Android 에뮬레이터 | `http://10.0.2.2:5173` |
+| 실제 기기 (Expo Go) | `http://{개발 PC의 LAN IP}:5173` |
 
-```
-EXPO_PUBLIC_WEB_URL=http://192.168.0.2:5173
-```
+실제 기기에서는 `localhost`가 기기 자신을 가리켜 개발 PC에 닿지 않으므로 LAN IP를 써야 하고, 웹도 `pnpm dev --host`로 띄워야 한다.
+
+자세한 실행 방법·준비물·트러블슈팅은 **[docs/local-development.md](docs/local-development.md)** 참고.
 
 ## 스크립트
 
@@ -52,4 +54,8 @@ src/
 └─ utils/                공용 유틸
 ```
 
-컨벤션은 `docs/conventions/` 참고.
+## 문서
+
+- [로컬 실행 가이드](docs/local-development.md)
+- [코딩 컨벤션](docs/conventions/coding-style.md)
+- [Git 컨벤션](docs/conventions/git-convention.md)
