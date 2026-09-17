@@ -1,7 +1,7 @@
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, Linking, Platform, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewNavigation } from "react-native-webview";
 import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { WEB_URL } from "@/constants/config";
@@ -14,6 +14,7 @@ const styles = StyleSheet.create({
 });
 
 export default function WebViewScreen() {
+  const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -86,7 +87,12 @@ export default function WebViewScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
+    // 세이프에어리어는 네이티브가 담당하고 웹은 주어진 영역을 100%로 채우기만 한다.
+    // 위아래 스트립은 맞닿는 웹 화면과 같은 색으로 칠해야 경계선이 보이지 않는데,
+    // 위는 웹 본문 배경 / 아래는 Bottom Nav 배경이라 색이 서로 달라
+    // SafeAreaView 하나로는 칠할 수 없다. 인셋을 직접 재서 나눠 칠한다.
+    <View className="flex-1">
+      <View className="bg-web-background-alternative" style={{ height: insets.top }} />
       <View className="flex-1">
         <WebView
           onError={() => setHasError(true)}
@@ -110,6 +116,7 @@ export default function WebViewScreen() {
           </View>
         )}
       </View>
-    </SafeAreaView>
+      <View className="bg-web-background-normal" style={{ height: insets.bottom }} />
+    </View>
   );
 }
