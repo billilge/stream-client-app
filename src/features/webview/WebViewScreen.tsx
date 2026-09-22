@@ -2,10 +2,14 @@ import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, Linking, Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView, type WebViewNavigation } from "react-native-webview";
+import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
 import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { WEB_URL } from "@/constants/config";
 import WebViewMessage from "@/features/webview/components/WebViewMessage";
+import {
+  DEFAULT_SAFE_AREA_COLORS,
+  parseSafeAreaColorsMessage,
+} from "@/features/webview/safeAreaColors";
 import { isSameOrigin } from "@/utils/url";
 
 // WebView는 서드파티 컴포넌트라 NativeWind의 className이 적용되지 않는다. style로 채운다.
@@ -19,6 +23,7 @@ export default function WebViewScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [safeAreaColors, setSafeAreaColors] = useState(DEFAULT_SAFE_AREA_COLORS);
 
   // 안드로이드 하드웨어 백 버튼은 기본적으로 앱을 종료한다. 웹 히스토리가 남아 있으면 뒤로 보낸다.
   useEffect(() => {
@@ -40,11 +45,23 @@ export default function WebViewScreen() {
   const handleRetry = useCallback(() => {
     setHasError(false);
     setIsLoading(true);
+    // 다시 띄우는 웹이 색을 알려줄 때까지는 기본값으로 돌아간다 — 실패 직전 화면 색이 남으면
+    // 엉뚱한 화면 위에 그 색 스트립이 얹힌다.
+    setSafeAreaColors(DEFAULT_SAFE_AREA_COLORS);
     webViewRef.current?.reload();
   }, []);
 
   const handleNavigationStateChange = useCallback((navigation: WebViewNavigation) => {
     setCanGoBack(navigation.canGoBack);
+  }, []);
+
+  // 웹은 화면 배경이 바뀔 때마다 세이프에어리어 스트립 색을 보낸다. 아는 메시지만 반영한다.
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
+    const colors = parseSafeAreaColorsMessage(event.nativeEvent.data);
+
+    if (colors) {
+      setSafeAreaColors(colors);
+    }
   }, []);
 
   // 서비스 바깥 주소는 웹뷰 안에서 열지 않고 시스템 브라우저·기본 앱으로 넘긴다.
@@ -89,10 +106,10 @@ export default function WebViewScreen() {
   return (
     // 세이프에어리어는 네이티브가 담당하고 웹은 주어진 영역을 100%로 채우기만 한다.
     // 위아래 스트립은 맞닿는 웹 화면과 같은 색으로 칠해야 경계선이 보이지 않는데,
-    // 위는 웹 본문 배경 / 아래는 Bottom Nav 배경이라 색이 서로 달라
-    // SafeAreaView 하나로는 칠할 수 없다. 인셋을 직접 재서 나눠 칠한다.
+    // 위아래 색이 서로 다르고 화면마다도 달라서 SafeAreaView 하나로는 칠할 수 없다.
+    // 인셋을 직접 재서 나눠 칠하고, 색은 웹이 알려준 값을 쓴다(safeAreaColors.ts 참고).
     <View className="flex-1">
-      <View className="bg-web-background-alternative" style={{ height: insets.top }} />
+      <View style={{ backgroundColor: safeAreaColors.top, height: insets.top }} />
       <View className="flex-1">
         <WebView
           onError={() => setHasError(true)}
@@ -104,6 +121,7 @@ export default function WebViewScreen() {
           }}
           onLoadEnd={() => setIsLoading(false)}
           onLoadStart={() => setIsLoading(true)}
+          onMessage={handleMessage}
           onNavigationStateChange={handleNavigationStateChange}
           onShouldStartLoadWithRequest={handleShouldStartLoad}
           ref={webViewRef}
@@ -116,7 +134,7 @@ export default function WebViewScreen() {
           </View>
         )}
       </View>
-      <View className="bg-web-background-normal" style={{ height: insets.bottom }} />
+      <View style={{ backgroundColor: safeAreaColors.bottom, height: insets.bottom }} />
     </View>
   );
 }
