@@ -30,7 +30,25 @@ WebView가 띄울 주소는 `.env.local`의 `EXPO_PUBLIC_WEB_URL`로 주입한�
 
 실제 기기에서는 `localhost`가 기기 자신을 가리켜 개발 PC에 닿지 않으므로 LAN IP를 써야 하고, 웹도 `pnpm dev --host`로 띄워야 한다.
 
+웹을 직접 띄우지 않고 앱만 볼 거라면 배포된 dev 환경을 가리켜도 된다 — `https://dev.stream.billilge.site`
+
 자세한 실행 방법·준비물·트러블슈팅은 **[docs/local-development.md](docs/local-development.md)** 참고.
+
+### 배포 빌드의 웹 주소
+
+`.env.local`은 로컬 실행 전용이다. `EXPO_PUBLIC_*`는 런타임이 아니라 **빌드 시점에 번들에 문자열로 박히고**, `.env.local`은 git에 올라가지 않아 EAS 클라우드 빌드에는 존재하지 않는다. 그래서 배포 빌드의 주소는 `eas.json`의 프로필별 `env`로 주입한다.
+
+| 프로필 | `EXPO_PUBLIC_WEB_URL` |
+| --- | --- |
+| `development` | 주입하지 않음 — 로컬 metro가 `.env.local`을 읽는다 |
+| `preview` | `https://dev.stream.billilge.site` |
+| `production` | **아직 비어 있음** — 운영 주소가 정해지면 채운다 |
+
+`production`을 비워 둔 값으로 빌드하면 앱이 "웹 주소가 설정되지 않았습니다" 안내 화면을 띄운다. 잘못된 주소로 조용히 배포되는 것보다 낫다고 보고 일부러 채우지 않았다.
+
+번들에 그대로 박히므로 **비밀값은 `EXPO_PUBLIC_*`에 넣지 않는다.** 웹 주소는 공개돼도 되는 값이라 `eas.json`에 평문으로 둔다.
+
+`eas build`를 실제로 돌리려면 `eas init`으로 `app.json`에 `extra.eas.projectId`가 먼저 채워져야 한다.
 
 ## 스크립트
 
