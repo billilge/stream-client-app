@@ -52,11 +52,11 @@ export interface NavigationBackGuardPayload {
 // 고른다. `//host`·`/\host`는 URL로 풀면 다른 호스트를 가리키게 되므로 경로로 치지 않는다.
 const PATH_PATTERN = /^\/(?![/\\])/;
 
-function isPath(value: unknown): value is string {
+export function isPath(value: unknown): value is string {
   return typeof value === "string" && PATH_PATTERN.test(value);
 }
 
-function isNavigationButton(value: unknown): value is NavigationButton {
+export function isNavigationButton(value: unknown): value is NavigationButton {
   return value === "back" || value === "close";
 }
 
