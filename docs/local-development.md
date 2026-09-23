@@ -20,6 +20,10 @@ cp .env.example .env.local
 | Android 에뮬레이터 | `http://10.0.2.2:5173` | `10.0.2.2`가 호스트 PC의 `localhost`에 매핑된다 |
 | 실제 기기 (Expo Go) | `http://{개발 PC의 LAN IP}:5173` | 기기와 PC가 같은 네트워크에 있어야 한다 |
 
+웹까지 직접 띄우기 번거로우면 배포된 dev 환경(`https://dev.stream.billilge.site`)을 가리켜도 된다. 이 경우 아래 "2. 웹 서버 띄우기"는 건너뛴다. 다만 웹을 고치면서 보려면 로컬 주소를 써야 한다.
+
+배포 빌드(`eas build`)는 `.env.local`이 아니라 `eas.json`의 프로필별 `env`로 주소를 주입한다 — [README](../README.md#배포-빌드의-웹-주소) 참고.
+
 LAN IP 확인:
 
 ```bash
