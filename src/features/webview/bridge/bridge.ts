@@ -7,11 +7,24 @@
  *
  * 메시지 추가 절차:
  *   1. `messages/<이름>.ts`에 type 상수 · payload 인터페이스 · `(payload: unknown) => T | null` 파서
+ *      type은 `영역.동작`으로 짓는다(예: `navigation.push`). `safeAreaColors`는 이 규칙 전에 생긴
+ *      이름이라 그대로 둔다
  *   2. 아래 `parsers`에 한 줄 등록 — 나머지 타입은 여기서 파생된다
  *   3. 화면의 `dispatchBridgeMessage` 핸들러에 항목 추가
  *   4. stream-client-web에 같은 type 상수·같은 payload 필드로 송신부 작성 (PR을 서로 링크)
  */
 
+import {
+  NAVIGATION_BACK_GUARD_MESSAGE_TYPE,
+  NAVIGATION_CLOSE_MESSAGE_TYPE,
+  NAVIGATION_POP_MESSAGE_TYPE,
+  NAVIGATION_PUSH_MESSAGE_TYPE,
+  NAVIGATION_REPLACE_MESSAGE_TYPE,
+  parseNavigationBackGuardPayload,
+  parseNavigationClosePayload,
+  parseNavigationPopPayload,
+  parseNavigationScreenPayload,
+} from "@/features/webview/bridge/messages/navigation";
 import {
   parseSafeAreaColorsPayload,
   SAFE_AREA_COLORS_MESSAGE_TYPE,
@@ -21,6 +34,11 @@ import {
 // 스크립트든 부를 수 있어, 이상한 값은 오류가 아니라 "우리 메시지가 아님"으로 다룬다.
 const parsers = {
   [SAFE_AREA_COLORS_MESSAGE_TYPE]: parseSafeAreaColorsPayload,
+  [NAVIGATION_PUSH_MESSAGE_TYPE]: parseNavigationScreenPayload,
+  [NAVIGATION_REPLACE_MESSAGE_TYPE]: parseNavigationScreenPayload,
+  [NAVIGATION_POP_MESSAGE_TYPE]: parseNavigationPopPayload,
+  [NAVIGATION_CLOSE_MESSAGE_TYPE]: parseNavigationClosePayload,
+  [NAVIGATION_BACK_GUARD_MESSAGE_TYPE]: parseNavigationBackGuardPayload,
 } satisfies Record<string, (payload: unknown) => unknown>;
 
 type BridgeMessageType = keyof typeof parsers;
