@@ -5,11 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
 import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { WEB_URL } from "@/constants/config";
+import { dispatchBridgeMessage } from "@/features/webview/bridge/bridge";
+import { DEFAULT_SAFE_AREA_COLORS } from "@/features/webview/bridge/messages/safeAreaColors";
 import WebViewMessage from "@/features/webview/components/WebViewMessage";
-import {
-  DEFAULT_SAFE_AREA_COLORS,
-  parseSafeAreaColorsMessage,
-} from "@/features/webview/safeAreaColors";
 import { isSameOrigin } from "@/utils/url";
 
 // WebView는 서드파티 컴포넌트라 NativeWind의 className이 적용되지 않는다. style로 채운다.
@@ -55,13 +53,12 @@ export default function WebViewScreen() {
     setCanGoBack(navigation.canGoBack);
   }, []);
 
-  // 웹은 화면 배경이 바뀔 때마다 세이프에어리어 스트립 색을 보낸다. 아는 메시지만 반영한다.
+  // 웹이 보내는 메시지는 브리지가 가려내고, 여기서는 type별로 무엇을 할지만 적는다.
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
-    const colors = parseSafeAreaColorsMessage(event.nativeEvent.data);
-
-    if (colors) {
-      setSafeAreaColors(colors);
-    }
+    dispatchBridgeMessage(event.nativeEvent.data, {
+      // 웹은 화면 배경이 바뀔 때마다 세이프에어리어 스트립 색을 보낸다.
+      safeAreaColors: setSafeAreaColors,
+    });
   }, []);
 
   // 서비스 바깥 주소는 웹뷰 안에서 열지 않고 시스템 브라우저·기본 앱으로 넘긴다.
