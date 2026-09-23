@@ -4,7 +4,12 @@ import { ActivityIndicator, Linking, StyleSheet, View } from "react-native";
 import { WebView, type WebViewNavigation } from "react-native-webview";
 import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { WEB_URL } from "@/constants/config";
-import { type BridgeHandlers, dispatchBridgeMessage } from "@/features/webview/bridge/bridge";
+import {
+  type BridgeHandlers,
+  createShellScript,
+  dispatchBridgeMessage,
+  type ShellInfo,
+} from "@/features/webview/bridge/bridge";
 import WebViewMessage from "@/features/webview/components/WebViewMessage";
 import { isSameOrigin } from "@/utils/url";
 
@@ -18,6 +23,8 @@ interface ShellWebViewProps {
   url: string;
   /** 웹이 보내는 브리지 메시지를 type별로 받는다. */
   handlers: BridgeHandlers;
+  /** 웹에 알리는 셸 정보. 페이지가 뜰 때마다 `window.__STREAM_SHELL__`로 넣는다. */
+  shell: ShellInfo;
   onNavigationStateChange?: (navigation: WebViewNavigation) => void;
   /** 오류 화면에서 다시 시도를 눌렀을 때. 화면이 웹에서 받아 둔 상태를 되돌릴 때 쓴다. */
   onRetry?: () => void;
@@ -28,6 +35,7 @@ interface ShellWebViewProps {
 export default function ShellWebView({
   url,
   handlers,
+  shell,
   onNavigationStateChange,
   onRetry,
   ref,
@@ -75,6 +83,7 @@ export default function ShellWebView({
   return (
     <View className="flex-1">
       <WebView
+        injectedJavaScriptBeforeContentLoaded={createShellScript(shell)}
         onError={() => setHasError(true)}
         // 이미지·스크립트 같은 하위 리소스 실패까지 오류 화면으로 넘기지 않도록 본문 요청만 본다.
         onHttpError={({ nativeEvent }) => {

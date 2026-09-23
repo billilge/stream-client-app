@@ -1,34 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { BackHandler, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { WebView, WebViewNavigation } from "react-native-webview";
+import type { WebViewNavigation } from "react-native-webview";
 import { WEB_URL } from "@/constants/config";
+import type { ShellInfo } from "@/features/webview/bridge/bridge";
 import { DEFAULT_SAFE_AREA_COLORS } from "@/features/webview/bridge/messages/safeAreaColors";
 import ShellWebView from "@/features/webview/components/ShellWebView";
 import WebViewMessage from "@/features/webview/components/WebViewMessage";
+import { rootWebViewRef, toStackHref } from "@/features/webview/stackNavigation";
+
+// 탭 화면 웹뷰에는 앱 버튼이 없다. 하단 탭으로 오가는 화면이라 뒤로가기를 두지 않는다.
+const ROOT_SHELL: ShellInfo = { button: null, navigation: 1, screen: "root" };
 
 export default function WebViewScreen() {
   const insets = useSafeAreaInsets();
-  const webViewRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [safeAreaColors, setSafeAreaColors] = useState(DEFAULT_SAFE_AREA_COLORS);
 
   // 안드로이드 하드웨어 백 버튼은 기본적으로 앱을 종료한다. 웹 히스토리가 남아 있으면 뒤로 보낸다.
-  useEffect(() => {
-    if (Platform.OS !== "android") {
-      return;
-    }
-
-    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!canGoBack) {
-        return false;
+  // 루트가 보일 때만 건다 — 리스너는 나중에 등록된 것부터 불리는데, 루트 리스너가 스택 화면 위에서도
+  // 살아 있으면 스택 화면을 닫지 않고 가려진 루트 웹뷰가 대신 뒤로 간다.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") {
+        return;
       }
-      webViewRef.current?.goBack();
-      return true;
-    });
 
-    return () => subscription.remove();
-  }, [canGoBack]);
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (!canGoBack) {
+          return false;
+        }
+        rootWebViewRef.current?.goBack();
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, [canGoBack]),
+  );
 
   const handleRetry = useCallback(() => {
     // 다시 띄우는 웹이 색을 알려줄 때까지는 기본값으로 돌아간다 — 실패 직전 화면 색이 남으면
@@ -59,12 +68,15 @@ export default function WebViewScreen() {
       <ShellWebView
         // 웹이 보내는 메시지는 브리지가 가려내고, 여기서는 type별로 무엇을 할지만 적는다.
         handlers={{
+          // 하단 탭이 없는 화면(상세·신청서 등)은 웹뷰 안에서 넘기지 않고 스택에 쌓는다.
+          "navigation.push": (screen) => router.push(toStackHref(screen)),
           // 웹은 화면 배경이 바뀔 때마다 세이프에어리어 스트립 색을 보낸다.
           safeAreaColors: setSafeAreaColors,
         }}
         onNavigationStateChange={handleNavigationStateChange}
         onRetry={handleRetry}
-        ref={webViewRef}
+        ref={rootWebViewRef}
+        shell={ROOT_SHELL}
         url={WEB_URL}
       />
       <View style={{ backgroundColor: safeAreaColors.bottom, height: insets.bottom }} />

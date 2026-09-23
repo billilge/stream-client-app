@@ -11,6 +11,8 @@
  * 표식 문자열과 payload 필드 이름은 양쪽이 맞춰야 한다.
  */
 
+// 웹 → 앱
+
 /** 스택에 화면을 새로 쌓는다. */
 export const NAVIGATION_PUSH_MESSAGE_TYPE = "navigation.push";
 /** 지금 스택 화면을 바꿔 끼운다. 제출이 끝난 신청서처럼 돌아가면 안 되는 화면을 치울 때 쓴다. */
@@ -21,6 +23,11 @@ export const NAVIGATION_POP_MESSAGE_TYPE = "navigation.pop";
 export const NAVIGATION_CLOSE_MESSAGE_TYPE = "navigation.close";
 /** 뒤로가기를 막을지 알린다. 작성 중인 신청서처럼 나가기 전에 웹이 확인해야 하는 화면에서 켠다. */
 export const NAVIGATION_BACK_GUARD_MESSAGE_TYPE = "navigation.backGuard";
+
+// 앱 → 웹
+
+/** 루트 웹뷰를 이 경로로 보낸다. 스택을 닫으면서 루트를 다른 화면으로 보낼 때(`close`의 `path`) 쓴다. */
+export const NAVIGATION_NAVIGATE_MESSAGE_TYPE = "navigation.navigate";
 
 /**
  * 앱이 웹 헤더 위에 겹쳐 그리는 버튼.
@@ -41,6 +48,10 @@ export type NavigationPopPayload = Record<string, never>;
 export interface NavigationClosePayload {
   /** 있으면 스택을 닫은 뒤 루트 웹뷰를 이 경로로 보낸다. 없으면 루트는 있던 화면 그대로다. */
   path?: string;
+}
+
+export interface NavigationNavigatePayload {
+  path: string;
 }
 
 export interface NavigationBackGuardPayload {
