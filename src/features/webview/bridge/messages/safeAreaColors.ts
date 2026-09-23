@@ -30,7 +30,7 @@ export const DEFAULT_SAFE_AREA_COLORS: SafeAreaColors = {
 // 스트립이 검게 칠해지는 일이 없도록 표기를 확인하고 통과시킨다.
 const CSS_COLOR_PATTERN = /^#[0-9a-f]{3,8}$|^rgba?\([\d\s.,%/]+\)$/i;
 
-export function isColor(value: unknown): value is string {
+function isColor(value: unknown): value is string {
   return typeof value === "string" && CSS_COLOR_PATTERN.test(value);
 }
 
