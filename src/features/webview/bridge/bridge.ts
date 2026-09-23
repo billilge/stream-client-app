@@ -28,11 +28,13 @@ import type { WebView } from "react-native-webview";
 
 import {
   NAVIGATION_BACK_GUARD_MESSAGE_TYPE,
+  NAVIGATION_BACK_REQUESTED_MESSAGE_TYPE,
   NAVIGATION_CLOSE_MESSAGE_TYPE,
   NAVIGATION_NAVIGATE_MESSAGE_TYPE,
   NAVIGATION_POP_MESSAGE_TYPE,
   NAVIGATION_PUSH_MESSAGE_TYPE,
   NAVIGATION_REPLACE_MESSAGE_TYPE,
+  type NavigationBackRequestedPayload,
   type NavigationButton,
   type NavigationNavigatePayload,
   parseNavigationBackGuardPayload,
@@ -105,6 +107,7 @@ export function dispatchBridgeMessage(data: string, handlers: BridgeHandlers): v
 
 // 앱 → 웹으로 보내는 메시지의 type ↔ payload 짝. 받는 쪽 검증은 웹이 하므로 여기서는 타입만 묶는다.
 interface BridgeOutgoingMessages {
+  [NAVIGATION_BACK_REQUESTED_MESSAGE_TYPE]: NavigationBackRequestedPayload;
   [NAVIGATION_NAVIGATE_MESSAGE_TYPE]: NavigationNavigatePayload;
 }
 

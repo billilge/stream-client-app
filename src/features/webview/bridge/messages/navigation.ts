@@ -28,6 +28,8 @@ export const NAVIGATION_BACK_GUARD_MESSAGE_TYPE = "navigation.backGuard";
 
 /** 루트 웹뷰를 이 경로로 보낸다. 스택을 닫으면서 루트를 다른 화면으로 보낼 때(`close`의 `path`) 쓴다. */
 export const NAVIGATION_NAVIGATE_MESSAGE_TYPE = "navigation.navigate";
+/** 가드가 켜진 화면에서 사용자가 ←·스와이프·안드로이드 백으로 나가려 했다. 웹이 나갈지 정해 `pop`을 보낸다. */
+export const NAVIGATION_BACK_REQUESTED_MESSAGE_TYPE = "navigation.backRequested";
 
 /**
  * 앱이 웹 헤더 위에 겹쳐 그리는 버튼.
@@ -49,6 +51,8 @@ export interface NavigationClosePayload {
   /** 있으면 스택을 닫은 뒤 루트 웹뷰를 이 경로로 보낸다. 없으면 루트는 있던 화면 그대로다. */
   path?: string;
 }
+
+export type NavigationBackRequestedPayload = Record<string, never>;
 
 export interface NavigationNavigatePayload {
   path: string;

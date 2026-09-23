@@ -1,12 +1,15 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
-import { useCallback, useState } from "react";
+import { usePreventRemove } from "expo-router/react-navigation";
+import { useCallback, useRef, useState } from "react";
 import { BackHandler, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { WebView } from "react-native-webview";
 import { WEB_URL } from "@/constants/config";
 import { sendBridgeMessage } from "@/features/webview/bridge/bridge";
 import {
   isNavigationButton,
   isPath,
+  NAVIGATION_BACK_REQUESTED_MESSAGE_TYPE,
   NAVIGATION_NAVIGATE_MESSAGE_TYPE,
   type NavigationButton,
 } from "@/features/webview/bridge/messages/navigation";
@@ -32,7 +35,10 @@ export default function StackWebViewScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const params = useLocalSearchParams<{ button?: string; path?: string }>();
+  const webViewRef = useRef<WebView>(null);
   const [safeAreaColors, setSafeAreaColors] = useState(DEFAULT_SAFE_AREA_COLORS);
+  const [isBackGuarded, setIsBackGuarded] = useState(false);
+  const allowWebNavigationRef = useRef(false);
 
   // expo-router는 라우트를 앱 스킴 링크(streamclientapp://stack?path=...)로도 열어 준다. 웹이 보낸
   // 값만 들어온다고 볼 수 없어서 브리지 메시지와 같은 기준으로 다시 확인한다. 경로가 `/`로 시작해야
@@ -61,6 +67,29 @@ export default function StackWebViewScreen() {
     }, [visibleButton]),
   );
 
+  // 작성 중인 신청서처럼 웹이 가드를 켠 화면은 ←·스와이프·안드로이드 백을 막고 나갈지 웹에 묻는다.
+  // native-stack이 iOS 스와이프까지 네이티브에서 막고, 셋 다 이 콜백으로 모인다.
+  usePreventRemove(isBackGuarded, ({ data }) => {
+    if (allowWebNavigationRef.current) {
+      allowWebNavigationRef.current = false;
+      // 막힌 동작에는 이 화면을 이미 확인했다는 표시가 붙어 있어, 다시 보내면 가드를 지나간다.
+      // 지금 처리 중인 이동이 끝난 뒤에 보낸다.
+      queueMicrotask(() => navigation.dispatch(data.action));
+      return;
+    }
+    sendBridgeMessage(webViewRef.current, NAVIGATION_BACK_REQUESTED_MESSAGE_TYPE, {});
+  });
+
+  // 웹이 스스로 보내는 이동(pop·replace·close)은 웹이 이미 판단한 것이라 가드를 건너뛴다. 가드는
+  // 사용자가 앱 쪽 조작으로 나가는 것만 막는다 — 제출이 끝나 결과 화면으로 replace할 때처럼 작성
+  // 내용이 남아 있어도 웹이 옮기는 건 막으면 안 된다.
+  // router.replace·dismissAll은 expo-router 큐에 쌓였다가 다음 렌더 뒤에 실행되지만, 셋 다 결국 이
+  // 화면을 스택에서 빼는 이동이라 막히면 위 콜백이 플래그를 소비하고, 안 막히면 화면이 사라진다.
+  const navigateFromWeb = (navigate: () => void) => {
+    allowWebNavigationRef.current = isBackGuarded;
+    navigate();
+  };
+
   const handleButtonPress = useCallback(
     (pressed: NavigationButton) => {
       if (pressed === "back") {
@@ -75,6 +104,8 @@ export default function StackWebViewScreen() {
   const handleRetry = useCallback(() => {
     // 루트와 같은 이유로, 다시 띄우는 웹이 색을 알려줄 때까지는 기본값으로 돌아간다.
     setSafeAreaColors(DEFAULT_SAFE_AREA_COLORS);
+    // 다시 띄운 웹에는 작성하던 내용이 없다. 웹이 다시 켤 때까지 가드를 끈다.
+    setIsBackGuarded(false);
   }, []);
 
   return (
@@ -92,8 +123,9 @@ export default function StackWebViewScreen() {
         ) : (
           <ShellWebView
             handlers={{
+              "navigation.backGuard": ({ enabled }) => setIsBackGuarded(enabled),
               "navigation.close": ({ path }) => {
-                closeStack();
+                navigateFromWeb(closeStack);
                 if (path !== undefined) {
                   sendBridgeMessage(rootWebViewRef.current, NAVIGATION_NAVIGATE_MESSAGE_TYPE, {
                     path,
@@ -101,12 +133,14 @@ export default function StackWebViewScreen() {
                 }
               },
               // 이 화면의 navigation으로 닫아야, 메시지를 늦게 보낸 아래 화면이 맨 위 화면을 닫지 않는다.
-              "navigation.pop": () => navigation.goBack(),
+              "navigation.pop": () => navigateFromWeb(() => navigation.goBack()),
               "navigation.push": (screen) => router.push(toStackHref(screen)),
-              "navigation.replace": (screen) => router.replace(toStackHref(screen)),
+              "navigation.replace": (screen) =>
+                navigateFromWeb(() => router.replace(toStackHref(screen))),
               safeAreaColors: setSafeAreaColors,
             }}
             onRetry={handleRetry}
+            ref={webViewRef}
             shell={{ button, navigation: 1, screen: "stack" }}
             url={url}
           />
