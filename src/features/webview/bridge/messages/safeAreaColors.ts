@@ -9,10 +9,10 @@
  * 구조라 값을 앱이 들고 있지 않도록 바꿨다.
  *
  * 송신부: stream-client-web의 `src/components/ui/useNativeSafeAreaColors.ts`.
- * 표식 문자열과 필드 이름은 양쪽이 맞춰야 한다.
+ * 표식 문자열과 payload 필드 이름은 양쪽이 맞춰야 한다.
  */
 
-const SAFE_AREA_COLORS_MESSAGE_TYPE = "safeAreaColors";
+export const SAFE_AREA_COLORS_MESSAGE_TYPE = "safeAreaColors";
 
 export interface SafeAreaColors {
   bottom: string;
@@ -34,25 +34,15 @@ function isColor(value: unknown): value is string {
   return typeof value === "string" && CSS_COLOR_PATTERN.test(value);
 }
 
-/** 웹이 보낸 원문에서 스트립 색을 꺼낸다. 이 앱이 아는 메시지가 아니면 `null`. */
-export function parseSafeAreaColorsMessage(data: string): SafeAreaColors | null {
-  let payload: unknown;
-
-  try {
-    payload = JSON.parse(data);
-  } catch {
-    // JSON이 아니면 우리 메시지가 아니다. 웹이 다른 용도로 postMessage를 쓸 수 있으므로
-    // 오류로 다루지 않고 흘려보낸다.
-    return null;
-  }
-
+/** payload에서 스트립 색을 꺼낸다. 형식이 맞지 않으면 `null`. */
+export function parseSafeAreaColorsPayload(payload: unknown): SafeAreaColors | null {
   if (typeof payload !== "object" || payload === null) {
     return null;
   }
 
-  const { bottom, top, type } = payload as Record<string, unknown>;
+  const { bottom, top } = payload as Record<string, unknown>;
 
-  if (type !== SAFE_AREA_COLORS_MESSAGE_TYPE || !isColor(top) || !isColor(bottom)) {
+  if (!isColor(top) || !isColor(bottom)) {
     return null;
   }
 
