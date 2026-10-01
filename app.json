@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "stream-client-app",
-    "slug": "stream-client-app",
-    "version": "1.0.0",
+    "name": "스트림",
+    "slug": "stream",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "streamclientapp",
+    "scheme": "kmustream",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -37,6 +37,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "406e6f5b-aa0f-4218-9021-06c59068ccd6"
+      }
+    },
+    "owner": "kmusw-stream"
   }
 }
